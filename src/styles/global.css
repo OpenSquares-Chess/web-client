@@ -1,0 +1,51 @@
+:root {
+  --board-dark:#769656;
+  --board-light:#eeeed2;
+  --accent:#1f6feb;
+
+  --header-h:56px;   /* header height */
+  --topbar-h:72px;   /* fallback; GameRoom sets this precisely at runtime */
+
+  --board-cap:720px; /* maximum board size */
+}
+
+* { box-sizing: border-box; }
+html,body,#root { height:100%; margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background:#fff; color:#111;}
+
+.container { max-width: 1200px; margin: 0 auto; padding: 0 16px; }
+.btn { padding: 8px 12px; border-radius: 8px; border: 1px solid #ddd; background: white; cursor: pointer; }
+.btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+.input, textarea.input { padding: 8px 10px; border:1px solid #ddd; border-radius:8px; width:100%; }
+.row { display:flex; gap:12px; align-items:center; }
+.card { border:1px solid #e5e7eb; border-radius:12px; padding:16px; background:white; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+a { color: var(--accent); }
+
+/* Header */
+.app-header { height: var(--header-h); border-bottom: 1px solid #eee; background:#fafafa; display:flex; align-items:center; }
+.app-header .container { display:flex; gap:12px; align-items:center; }
+
+/* Game Room layout */
+.room-root {
+  height: calc(100svh - var(--header-h));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; 
+}
+
+.room-topbar {
+  border-bottom: 1px solid #eee;
+  background: #fff;
+  padding: 8px 0;
+}
+
+.room-topbar .meta {
+  font-size: 14px; color:#333; margin-top: 4px;
+}
+
+
+.room-stage {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  padding: 16px; 
+}
