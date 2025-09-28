@@ -30,9 +30,7 @@ function Game() {
 
   useEffect(() => {
     if (readyState === ReadyState.OPEN) connect();
-  }, [readyState]);
-
-  useEffect(connect, [room]);
+  }, [readyState, room]);
 
   useEffect(() => {
     if (lastMessage !== null) {
