@@ -32,6 +32,8 @@ function Game() {
     if (readyState === ReadyState.OPEN) connect();
   }, [readyState]);
 
+  useEffect(connect, [room]);
+
   useEffect(() => {
     if (lastMessage !== null) {
       if (lastMessage.data === 'pong') return;
@@ -45,8 +47,7 @@ function Game() {
           setOrientation(data.color);
           break;
         case 'room_full':
-          setRoom((room + 1) % 10);
-          connect();
+          setRoom(prevRoom => (prevRoom + 1) % 10);
           break;
       }
     }
