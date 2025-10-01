@@ -5,27 +5,26 @@ import useWebSocket, { ReadyState } from 'react-use-websocket';
 import { Chess } from 'chess.js';
 import type { Square } from 'chess.js';
 
-function Game() {
+interface GameProps {
+    subject: string | undefined
+}
+
+function Game({ subject }: GameProps) {
   const [fen, setFen] = useState('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
   const [orientation, setOrientation] = useState('white');
   const [room, setRoom] = useState(0);
   const { sendMessage, lastMessage, readyState } = useWebSocket('wss://play.opensquares.xyz', {
     shouldReconnect: () => true,
-    heartbeat: {
-      message: 'ping',
-      returnMessage: 'pong',
-      timeout: 50000,
-      interval: 20000,
-    },
   });
-
-  function connect() {
-      console.log(`Connecting to room ${room}`);
-      const message = {
-          'room': room,
-          'uuid': 'test'
-      }
-      sendMessage(JSON.stringify(message));
+  
+  const connect = () => {
+    if (subject === undefined) return;
+    console.log(`Connecting to room ${room}`);
+    const message = {
+      'room': room,
+      'uuid': subject
+    }
+    sendMessage(JSON.stringify(message));
   }
 
   useEffect(() => {
@@ -34,7 +33,6 @@ function Game() {
 
   useEffect(() => {
     if (lastMessage !== null) {
-      if (lastMessage.data === 'pong') return;
       const data = JSON.parse(lastMessage.data);
       console.log(data);
       switch (data.type) {
@@ -63,7 +61,7 @@ function Game() {
       square: sourceSquare as Square
     });
     if (possibleMoves.some(move => move.includes(`${targetSquare}=`))) {
-        uci += 'q';
+      uci += 'q';
     }
     
     try {
@@ -77,9 +75,9 @@ function Game() {
   }
 
   const chessboardOptions = {
-      position: fen,
-      boardOrientation: orientation as 'white' | 'black',
-      onPieceDrop
+    position: fen,
+    boardOrientation: orientation as 'white' | 'black',
+    onPieceDrop
   };
 
   return (
