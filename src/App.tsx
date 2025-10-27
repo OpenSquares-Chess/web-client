@@ -4,9 +4,11 @@ import Signup from "./features/game/auth/Signup";
 import { getSelfUser, createUser } from "./api/users";
 import type { CreateUserRequest } from "./types/user";
 import Game from "./features/game";
+import QueueScreen from "./features/game/matchmaking/QueueScreen";
 import Header from "./components/Header";
 
 type Profile = { id: string; username: string };
+type AppView = 'queue' | 'game';
 
 export default function App() {
   const { keycloak, initialized } = useKeycloak();
@@ -15,8 +17,14 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
+  
+  // New state for view management
+  const [currentView, setCurrentView] = useState<AppView>('queue');
+  const [currentGameId, setCurrentGameId] = useState<string | null>(null);
 
   const isAuth = !!keycloak?.authenticated;
+
+  // ... (keep existing loadProfile and handleCreate functions)
 
   async function loadProfile(token: string) {
     setChecking(true);
@@ -58,6 +66,21 @@ export default function App() {
       setBusy(false);
     }
   }
+
+  // Handle match found
+  const handleMatchFound = (gameId: string) => {
+    console.log('Match found! Game ID:', gameId);
+    setCurrentGameId(gameId);
+    setCurrentView('game');
+  };
+
+  // Handle back to queue
+  const handleBackToQueue = () => {
+    setCurrentView('queue');
+    setCurrentGameId(null);
+  };
+
+  // ... (keep existing auth check renders)
 
   if (!initialized) {
     return (
@@ -108,13 +131,31 @@ export default function App() {
     );
   }
 
+  // Main authenticated view with queue/game switching
   return (
     <div className="min-h-screen bg-[#1c1c24] text-[#cccccc]">
       <Header username={profile?.username || "Player"} />
-      <main className="mx-auto max-w-6xl px-4 py-6 flex justify-center">
-        <div className="mx-auto" style={{ width: "min(95vw, 1080px)" }}>
-          <Game subject={keycloak.tokenParsed?.sub || ""} />
-        </div>
+      <main className="mx-auto max-w-6xl px-4 py-6">
+        {currentView === 'queue' ? (
+          <QueueScreen
+            userId={keycloak.tokenParsed?.sub || ""}
+            username={profile?.username || "Player"}
+            onMatchFound={handleMatchFound}
+            onCancel={() => {/* Optional: handle cancel */}}
+          />
+        ) : (
+          <div className="mx-auto" style={{ width: "min(95vw, 1080px)" }}>
+            <div className="mb-4">
+              <button
+                onClick={handleBackToQueue}
+                className="px-4 py-2 text-sm bg-[#2a2a32] hover:bg-[#3a3a42] text-[#cccccc] rounded-lg transition-colors"
+              >
+                ← Back to Queue
+              </button>
+            </div>
+            <Game subject={keycloak.tokenParsed?.sub || ""} />
+          </div>
+        )}
       </main>
     </div>
   );
