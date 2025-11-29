@@ -128,16 +128,19 @@ function Game({ token, roomId, roomKey, onLeave, onPlayAgain }: GameProps) {
           onLeave();
           break;
         case 'game_over':
-          if (isActive) {
-            setInitialTime(initialTime - (performance.now() - startTime) / 1000);
-          } else if (oppIsActive) {
-            setOppInitialTime(oppInitialTime - (performance.now() - startTime) / 1000);
+          let delay: number;
+          if (data.timeout) {
+            if(isActive) setInitialTime(0);
+            if(oppIsActive) setOppInitialTime(0);
+            delay = 0;
+          } else {
+            delay = isActive ? 500 : 0
           }
           setIsActive(false);
           setOppIsActive(false);
           setTimeout(() => {
             setGameResult(data.winner);
-          }, 500);
+          }, delay);
           break;
       }
     }
