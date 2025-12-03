@@ -18,7 +18,7 @@ interface GameProps {
 function Game({ token, roomId, roomKey, onLeave, onPlayAgain }: GameProps) {
   const [fen, setFen] = useState('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
   const [orientation, setOrientation] = useState('white');
-  const [gameResult, setGameResult] = useState<string | null>(null);
+  const [gameResult, setGameResult] = useState<'white' | 'black' | 'draw' | null>(null);
 
   // Time sync internals
   const [syncCount, setSyncCount] = useState(0);
