@@ -60,14 +60,14 @@ function App() {
     });
   }
 
-  const onJoinQueue = (leaveQueue: () => void) => {
+  const onJoinQueue = (leaveQueue: () => void = () => {}) => {
     if (keycloak.token === undefined) return;
     const token = keycloak.token;
     if (socket) {
       socket.close();
       setSocket(null);
     }
-    const ws = new WebSocket(`wss://play.opensquares.xyz/queue`);
+    const ws = new WebSocket(import.meta.env.VITE_QUEUE_URL);
     ws.onopen = () => {
       ws.send(token);
       setCurrentScreen('waiting-in-queue');
@@ -116,6 +116,7 @@ function App() {
             roomId={roomId}
             roomKey={roomKey}
             onLeave={onLeaveGame}
+            onPlayAgain={onJoinQueue}
           />
         );
       default:
@@ -143,4 +144,4 @@ function App() {
   )
 }
 
-export default App
+export default App;

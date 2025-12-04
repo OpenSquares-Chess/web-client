@@ -4,18 +4,21 @@ import type { PieceDropHandlerArgs } from 'react-chessboard';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 import { Chess } from 'chess.js';
 import type { Square } from 'chess.js';
+import GameOverPopup from './GameOverPopup';
 
 interface GameProps {
-    token?: string,
-    roomId: number | null,
-    roomKey: string | null,
-    onLeave: () => void
+    token?: string;
+    roomId: number | null;
+    roomKey: string | null;
+    onLeave: () => void;
+    onPlayAgain: () => void;
 }
 
-function Game({ token, roomId, roomKey, onLeave }: GameProps) {
+function Game({ token, roomId, roomKey, onLeave, onPlayAgain }: GameProps) {
   const [fen, setFen] = useState('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
   const [orientation, setOrientation] = useState('white');
-  const { sendMessage, lastMessage, readyState } = useWebSocket('wss://play.opensquares.xyz/game', {
+  const [gameResult, setGameResult] = useState<string | null>(null);
+  const { sendMessage, lastMessage, readyState } = useWebSocket(import.meta.env.VITE_GAME_URL, {
     shouldReconnect: () => true,
   });
   
@@ -28,6 +31,7 @@ function Game({ token, roomId, roomKey, onLeave }: GameProps) {
   }
 
   const joinRoom = () => {
+    if (gameResult !== null) return;
     console.log(`Joining room ${roomId}`);
     const message = {
       'room': roomId,
@@ -62,6 +66,11 @@ function Game({ token, roomId, roomKey, onLeave }: GameProps) {
           break;
         case 'game_canceled':
           onLeave();
+          break;
+        case 'game_over':
+          setTimeout(() => {
+            setGameResult(data.winner);
+          }, 500);
           break;
       }
     }
@@ -102,6 +111,15 @@ function Game({ token, roomId, roomKey, onLeave }: GameProps) {
     <div className="flex flex-col gap-2 w-[min(80vw,80vh)] mx-auto py-2 px-4 text-center">
       <span className="text-lg font-bold">Room: {roomId}</span>
       <Chessboard options={chessboardOptions} />
+      {gameResult !== null && (
+        <GameOverPopup
+          winner={gameResult}
+          onLeave={onLeave}
+          onPlayAgain={onPlayAgain}
+          whitePlayer={orientation === 'white' ? "You" : "Opponent"}
+          blackPlayer={orientation === 'white' ? "Opponent" : "You"}
+        />
+      )}
     </div>
   )
 }

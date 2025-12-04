@@ -2,7 +2,7 @@ import axios from 'axios';
 import { keycloak } from './keycloak';
 
 const api = axios.create({
-  baseURL: 'https://accounts.opensquares.xyz',
+  baseURL: import.meta.env.VITE_ACCOUNT_URL,
   headers: {
     'Content-Type': 'application/json',
   },
