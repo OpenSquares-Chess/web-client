@@ -57,6 +57,7 @@ function App() {
       setUsername(response.data.username);
       setProfileImage(response.data.profileImage);
       setCurrentScreen('play');
+      keycloak.updateToken(-1);
     });
   }
 
@@ -127,16 +128,16 @@ function App() {
   return (
     <>
       <div className='flex justify-end p-4'>
-      <div className='flex items-center space-x-2'>
-        {profileImage && (
-          <img
-            src={profileImage}
-            alt='Profile'
-            className='w-10 h-10 rounded-full object-cover mr-2'
-          />
-        )}
-        <span className='font-semibold text-gray-700 mr-4'>{username}</span>
-      </div>
+        <div className='flex items-center space-x-2'>
+          {profileImage && (
+            <img
+              src={profileImage}
+              alt='Profile'
+              className='w-10 h-10 rounded-full object-cover mr-2'
+            />
+          )}
+          <span className='font-semibold text-gray-700 mr-4'>{username}</span>
+        </div>
         <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => keycloak.logout()}>Logout</button>
       </div>
       {renderScreen()}

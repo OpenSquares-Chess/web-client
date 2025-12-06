@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 interface GameOverPopupProps {
   winner: 'white' | 'black' | 'draw' | null;
-  reason: string;
+  reason?: string;
   whitePlayer: string;
   blackPlayer: string;
   whiteRating?: number;
