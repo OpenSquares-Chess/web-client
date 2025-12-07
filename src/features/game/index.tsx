@@ -99,6 +99,9 @@ function Game({ token, roomId, roomKey, onLeave, onPlayAgain }: GameProps) {
           setOffsetSum(offsetSumTemp);
           setSyncCount(syncCountTemp);
           break;
+        case 'invalid_request':
+          onLeave();
+          break;
         case 'room_not_active':
           onLeave();
           break;
