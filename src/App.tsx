@@ -1,43 +1,47 @@
-import { useState, useEffect } from 'react';
-import { Chessboard } from 'react-chessboard';
-import { useKeycloak } from '@react-keycloak/web';
-import Game from './features/game';
-import NewProfile from './features/new-profile';
-import Play from './features/play';
-import WaitingInQueue from './features/waiting-in-queue';
-import api from './api';
+import { useState, useEffect } from "react";
+import { Chessboard } from "react-chessboard";
+import { useKeycloak } from "@react-keycloak/web";
+import Game from "./features/game";
+import NewProfile from "./features/new-profile";
+import Play from "./features/play";
+import WaitingInQueue from "./features/waiting-in-queue";
+import GameHistory from "./features/game-history";
+import api from "./api";
 
 function App() {
-  const [currentScreen, setCurrentScreen] = useState('play');
+  const [currentScreen, setCurrentScreen] = useState("play");
   const [socket, setSocket] = useState<WebSocket | null>(null);
-  const [username, setUsername] = useState('');
-  const [profileImage, setProfileImage] = useState('');
+  const [username, setUsername] = useState("");
+  const [userId, setUserId] = useState<string>("");
+  const [profileImage, setProfileImage] = useState("");
   const [roomId, setRoomId] = useState<number | null>(null);
   const [roomKey, setRoomKey] = useState<string | null>(null);
 
   const { keycloak, initialized } = useKeycloak();
-  
+
   useEffect(() => {
     if (initialized && keycloak.authenticated) {
-      api.get('/users/self')
-      .then((response) => {
-        setUsername(response.data.username);
-        setProfileImage(response.data.profileImage); 
-      })
-      .catch((error) => {
-        if (error.response.status === 404) {
-          setCurrentScreen('create');
-        }
-      });
+      api
+        .get("/users/self")
+        .then((response) => {
+          setUsername(response.data.username);
+          setProfileImage(response.data.profileImage);
+          setUserId(response.data.id);
+        })
+        .catch((error) => {
+          if (error.response.status === 404) {
+            setCurrentScreen("create");
+          }
+        });
     }
-  }, [keycloak, initialized])
+  }, [keycloak, initialized]);
 
   if (!initialized) {
     return (
       <div className="w-[min(80vw,80vh)] mx-auto p-4">
         <Chessboard />
       </div>
-    )
+    );
   }
 
   if (!keycloak.authenticated) {
@@ -46,20 +50,22 @@ function App() {
       <div className="w-[min(80vw,80vh)] mx-auto p-4">
         <Chessboard />
       </div>
-    )
+    );
   }
 
   const onCreateProfile = (username: string, imageLink: string) => {
-    api.post('/users', {
-      username: username,
-      profileImage: imageLink
-    }).then((response) => {
-      setUsername(response.data.username);
-      setProfileImage(response.data.profileImage);
-      setCurrentScreen('play');
-      keycloak.updateToken(-1);
-    });
-  }
+    api
+      .post("/users", {
+        username: username,
+        profileImage: imageLink,
+      })
+      .then((response) => {
+        setUsername(response.data.username);
+        setProfileImage(response.data.profileImage);
+        setCurrentScreen("play");
+        keycloak.updateToken(-1);
+      });
+  };
 
   const onJoinQueue = (leaveQueue: () => void = () => {}) => {
     if (keycloak.token === undefined) return;
@@ -71,46 +77,46 @@ function App() {
     const ws = new WebSocket(import.meta.env.VITE_QUEUE_URL);
     ws.onopen = () => {
       ws.send(token);
-      setCurrentScreen('waiting-in-queue');
-    }
+      setCurrentScreen("waiting-in-queue");
+    };
     ws.onmessage = (event) => {
       const { roomId, roomKey } = JSON.parse(event.data);
       setRoomId(+roomId);
       setRoomKey(roomKey);
-      setCurrentScreen('game');
+      setCurrentScreen("game");
       ws.close();
       setSocket(null);
-    }
+    };
     ws.onerror = () => {
       leaveQueue();
-    }
+    };
     ws.onclose = () => {
       leaveQueue();
-    }
+    };
     setSocket(ws);
-  }
+  };
 
-  const onLeaveQueue= () => {
-    socket?.send('leave');
+  const onLeaveQueue = () => {
+    socket?.send("leave");
     socket?.close();
-    setCurrentScreen('play');
-  }
+    setCurrentScreen("play");
+  };
 
   const onLeaveGame = () => {
-    setCurrentScreen('play');
+    setCurrentScreen("play");
     setRoomId(null);
     setRoomKey(null);
-  }
-  
+  };
+
   function renderScreen() {
     switch (currentScreen) {
-      case 'create':
+      case "create":
         return <NewProfile onSubmit={onCreateProfile} />;
-      case 'play':
+      case "play":
         return <Play onSubmit={onJoinQueue} />;
-      case 'waiting-in-queue':
+      case "waiting-in-queue":
         return <WaitingInQueue onLeave={onLeaveQueue} />;
-      case 'game':
+      case "game":
         return (
           <Game
             token={keycloak.token}
@@ -120,6 +126,15 @@ function App() {
             onPlayAgain={onJoinQueue}
           />
         );
+      case "history":
+        return userId ? (
+          <GameHistory
+            userId={userId}
+            onBack={() => setCurrentScreen("play")}
+          />
+        ) : (
+          <div className="p-4">Loading user information...</div>
+        );
       default:
         return null;
     }
@@ -127,22 +142,32 @@ function App() {
 
   return (
     <>
-      <div className='flex justify-end p-4'>
-        <div className='flex items-center space-x-2'>
+      <div className="flex justify-end p-4">
+        <div className="flex items-center space-x-2">
           {profileImage && (
             <img
               src={profileImage}
-              alt='Profile'
-              className='w-10 h-10 rounded-full object-cover mr-2'
+              alt="Profile"
+              className="w-10 h-10 rounded-full object-cover mr-2"
             />
           )}
-          <span className='font-semibold text-gray-700 mr-4'>{username}</span>
+          <span
+            className="font-semibold text-gray-700 mr-4 cursor-pointer hover:underline"
+            onClick={() => setCurrentScreen("history")}
+          >
+            {username}
+          </span>
         </div>
-        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => keycloak.logout()}>Logout</button>
+        <button
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          onClick={() => keycloak.logout()}
+        >
+          Logout
+        </button>
       </div>
       {renderScreen()}
     </>
-  )
+  );
 }
 
 export default App;
