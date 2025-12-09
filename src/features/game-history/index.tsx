@@ -26,7 +26,7 @@ function formatResult(result: GameResult) {
     case "black":
       return "0–1";
     case "draw":
-      return "0-0";
+      return "1/2-1/2";
     default:
       return result;
   }
@@ -107,11 +107,11 @@ export default function GameHistory({ userId, onBack }: GameHistoryProps) {
               const isUserBlack = g.playerTwoId === userId;
 
               const whiteLabel = isUserWhite
-                ? `${g.playerOneId} (You)`
-                : g.playerOneId;
+                ? `${g.playerOneUsername} (You)`
+                : g.playerOneUsername;
               const blackLabel = isUserBlack
-                ? `${g.playerTwoId} (You)`
-                : g.playerTwoId;
+                ? `${g.playerTwoUsername} (You)`
+                : g.playerTwoUsername;
 
               const score = formatResult(g.result);
 
