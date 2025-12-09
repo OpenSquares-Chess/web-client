@@ -14,6 +14,7 @@ function App() {
   const [username, setUsername] = useState("");
   const [userId, setUserId] = useState<string>("");
   const [profileImage, setProfileImage] = useState("");
+  const [opponentId, setOpponentId] = useState<string | null>(null);
   const [roomId, setRoomId] = useState<number | null>(null);
   const [roomKey, setRoomKey] = useState<string | null>(null);
 
@@ -80,7 +81,8 @@ function App() {
       setCurrentScreen("waiting-in-queue");
     };
     ws.onmessage = (event) => {
-      const { roomId, roomKey } = JSON.parse(event.data);
+      const { opponentId, roomId, roomKey } = JSON.parse(event.data);
+      setOpponentId(opponentId.split("-")[0]);
       setRoomId(+roomId);
       setRoomKey(roomKey);
       setCurrentScreen("game");
@@ -120,6 +122,7 @@ function App() {
         return (
           <Game
             token={keycloak.token}
+            opponentId={opponentId}
             roomId={roomId}
             roomKey={roomKey}
             onLeave={onLeaveGame}

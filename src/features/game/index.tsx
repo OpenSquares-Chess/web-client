@@ -6,16 +6,18 @@ import { Chess } from 'chess.js';
 import type { Square } from 'chess.js';
 import GameOverPopup from './GameOverPopup';
 import ChessClock from './ChessClock';
+import api from '../../api';
 
 interface GameProps {
     token?: string;
+    opponentId: string | null;
     roomId: number | null;
     roomKey: string | null;
     onLeave: () => void;
     onPlayAgain: () => void;
 }
 
-function Game({ token, roomId, roomKey, onLeave, onPlayAgain }: GameProps) {
+function Game({ token, opponentId, roomId, roomKey, onLeave, onPlayAgain }: GameProps) {
   const [fen, setFen] = useState('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
   const [orientation, setOrientation] = useState('white');
   const [gameResult, setGameResult] = useState<'white' | 'black' | 'draw' | null>(null);
@@ -34,6 +36,12 @@ function Game({ token, roomId, roomKey, onLeave, onPlayAgain }: GameProps) {
   // Opponent Clock internals
   const [oppIsActive, setOppIsActive] = useState(false);
   const [oppInitialTime, setOppInitialTime] = useState(0);
+
+  // User profile state
+  const [username, setUsername] = useState("");
+  const [profileImage, setProfileImage] = useState("");
+  const [opponentUsername, setOpponentUsername] = useState("");
+  const [opponentProfileImage, setOpponentProfileImage] = useState("");
 
   const { sendMessage, lastMessage, readyState } = useWebSocket(import.meta.env.VITE_GAME_URL, {
     shouldReconnect: () => true,
@@ -146,6 +154,21 @@ function Game({ token, roomId, roomKey, onLeave, onPlayAgain }: GameProps) {
     }
   }, [lastMessage]);
 
+  useEffect(() => {
+    api
+      .get("/users/self")
+      .then((response) => {
+        setUsername(response.data.username);
+        setProfileImage(response.data.profileImage);
+      });
+    api
+      .get(`/users/${opponentId}`)
+      .then((response) => {
+        setOpponentUsername(response.data.username);
+        setOpponentProfileImage(response.data.profileImage);
+      });
+  }, []);
+
   function onPieceDrop({
     sourceSquare,
     targetSquare,
@@ -180,7 +203,10 @@ function Game({ token, roomId, roomKey, onLeave, onPlayAgain }: GameProps) {
   return (
     <div className="flex flex-col gap-2 w-[min(73vw,73vh)] mx-auto py-2 px-4 text-center">
       <div className="flex flex-row justify-between items-center">
-        <b>Opponent</b>
+        <div className="flex items-center">
+          <img className="w-8 h-8 rounded-full object-cover" src={opponentProfileImage} alt={opponentUsername} />
+          <b>{opponentUsername}</b>
+        </div>
         <ChessClock
           initialTime={oppInitialTime}
           isActive={oppIsActive}
@@ -188,7 +214,10 @@ function Game({ token, roomId, roomKey, onLeave, onPlayAgain }: GameProps) {
         />
       </div><Chessboard options={chessboardOptions} />
       <div className="flex flex-row justify-between items-center">
-        <b>You</b>
+        <div className="flex items-center">
+          <img className="w-8 h-8 rounded-full object-cover" src={profileImage} alt={username} />
+          <b>{username}</b>
+        </div>
         <ChessClock
           initialTime={initialTime}
           isActive={isActive}
@@ -200,8 +229,8 @@ function Game({ token, roomId, roomKey, onLeave, onPlayAgain }: GameProps) {
           winner={gameResult}
           onLeave={onLeave}
           onPlayAgain={onPlayAgain}
-          whitePlayer={orientation === 'white' ? "You" : "Opponent"}
-          blackPlayer={orientation === 'white' ? "Opponent" : "You"}
+          whitePlayer={orientation === 'white' ? username : opponentUsername}
+          blackPlayer={orientation === 'white' ? opponentUsername : username}
         />
       )}
     </div>
